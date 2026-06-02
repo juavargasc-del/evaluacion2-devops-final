@@ -1,279 +1,154 @@
-# Evaluación Parcial N°2 – DevOps, Docker y CI/CD
+# 📦 Innovatech Chile - Sistema de Microservicios con Docker y CI/CD
 
-## Integrantes
+## Descripción
 
-* Juan Vargas
-* Matilda Vargas
+Este proyecto corresponde a la implementación de una solución basada en microservicios para la empresa Innovatech Chile.
 
-## Descripción del proyecto
+La aplicación está compuesta por un frontend web, dos microservicios backend (Ventas y Despachos) y una base de datos MySQL. La infraestructura fue contenedorizada utilizando Docker y orquestada mediante Docker Compose, permitiendo una ejecución consistente y portable en distintos entornos.
 
-Este proyecto corresponde a la Evaluación Parcial N°2 de la asignatura DevOps.
+Además, se implementó un pipeline de Integración Continua (CI) mediante GitHub Actions para automatizar la construcción y publicación de imágenes Docker.
 
-La solución está compuesta por:
+---
 
-* Microservicio de Ventas (Spring Boot)
-* Microservicio de Despachos (Spring Boot)
-* Frontend (React + Vite)
+## Repositorio
+
+Repositorio oficial del proyecto:
+
+https://github.com/juavargasc-del/evaluacion2-devops-final.git
+
+---
+
+## Arquitectura de la Solución
+
+La arquitectura está compuesta por los siguientes componentes:
+
+* Frontend Web
+* Microservicio de Ventas
+* Microservicio de Despachos
 * Base de Datos MySQL
 
-La aplicación fue contenedorizada utilizando Docker y Docker Compose, permitiendo su ejecución en entornos locales y servidores Linux.
-
-Además, se implementó un pipeline CI/CD mediante GitHub Actions para automatizar la construcción y publicación de imágenes Docker en Docker Hub.
+Cada componente se ejecuta dentro de su propio contenedor Docker, manteniendo independencia entre servicios y facilitando la escalabilidad y mantenibilidad de la solución.
 
 ---
 
-# Arquitectura
-
-Frontend (React)
-↓
-Microservicio Ventas (Spring Boot)
-↓
-MySQL
-
-Frontend (React)
-↓
-Microservicio Despachos (Spring Boot)
-↓
-MySQL
-
-Todos los servicios se ejecutan mediante contenedores Docker conectados en una misma red creada por Docker Compose.
-
----
-
-# Tecnologías utilizadas
+## Tecnologías Utilizadas
 
 * Java 17
-* Spring Boot 3
-* Maven
+* Spring Boot
 * React
-* Vite
-* MySQL 8
 * Docker
 * Docker Compose
+* MySQL 8
+* Git
+* GitHub
 * GitHub Actions
 * Docker Hub
 
 ---
 
-# Estructura del proyecto
+## Estructura General del Proyecto
 
-```text
-evaluacion2-devops/
-│
-├── back-Ventas_SpringBoot/
-│
-├── back-Despachos_SpringBoot/
-│
-├── front_despacho/
-│
-├── docker-compose.yml
-│
-└── .github/
-    └── workflows/
-        └── deploy.yml
-```
+El repositorio se encuentra organizado en módulos independientes para cada componente del sistema:
 
-# Dockerfiles
+* Frontend
+* Backend Ventas
+* Backend Despachos
+* Configuración Docker Compose
+* Pipeline CI/CD
 
-Cada componente posee su propio Dockerfile.
-
-Se utilizó Multi-Stage Build para los microservicios Spring Boot:
-
-1. Etapa Builder:
-
-   * Compilación con Maven Wrapper.
-   * Generación del archivo JAR.
-
-2. Etapa Runtime:
-
-   * Imagen liviana Eclipse Temurin JRE.
-   * Ejecución de la aplicación compilada.
-
-Beneficios:
-
-* Menor tamaño de imagen.
-* Mejor rendimiento.
-* Separación entre compilación y ejecución.
+Esta estructura permite mantener una separación clara de responsabilidades entre los distintos servicios.
 
 ---
 
-# Persistencia de datos
+## Contenedorización
 
-La base de datos utiliza un volumen Docker nombrado:
+Todos los componentes fueron preparados para ejecutarse dentro de contenedores Docker.
 
-```yaml
-volumes:
-  mysql_data:
-```
+La solución incorpora:
 
-Este volumen almacena la información de MySQL fuera del ciclo de vida del contenedor.
-
-Ventajas:
-
-* Los datos no se pierden al reiniciar contenedores.
-* Permite actualizaciones sin afectar la información almacenada.
-
-Se eligió un Named Volume por simplicidad, portabilidad y facilidad de administración.
+* Imágenes independientes por servicio.
+* Configuración de puertos y dependencias.
+* Variables de entorno para configuración flexible.
+* Construcción optimizada de imágenes.
+* Ejecución integrada mediante Docker Compose.
 
 ---
 
-# Configuración Docker Compose
+## Persistencia de Datos
 
-Para levantar todos los servicios:
+La persistencia se implementó utilizando volúmenes Docker administrados por la plataforma.
 
-```bash
-docker compose up -d
-```
-
-Para detenerlos:
-
-```bash
-docker compose down
-```
-
-Servicios incluidos:
-
-* mysql
-* ventas
-* despachos
-* frontend
+Esta configuración permite conservar la información almacenada en la base de datos incluso ante reinicios o recreación de contenedores, asegurando la continuidad operativa del sistema.
 
 ---
 
-# Variables de entorno
+## Integración Continua (CI)
 
-Los microservicios utilizan variables de entorno para conectarse a MySQL.
+Se implementó un flujo automatizado mediante GitHub Actions.
 
-Ejemplo:
+Cada actualización enviada a la rama de despliegue genera automáticamente:
 
-```yaml
-environment:
-  DB_ENDPOINT: mysql
-  DB_PORT: 3306
-  DB_NAME: despacho_db
-  DB_USERNAME: root
-  DB_PASSWORD: root
-```
+* Obtención del código fuente.
+* Construcción de imágenes Docker.
+* Publicación de imágenes en Docker Hub.
 
-La URL de conexión fue parametrizada mediante:
-
-```properties
-spring.datasource.url=jdbc:mysql://${DB_ENDPOINT}:${DB_PORT}/${DB_NAME}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&createDatabaseIfNotExist=true
-```
-
-Esto permite reutilizar la misma aplicación en distintos entornos.
+Esta automatización reduce errores manuales y asegura la trazabilidad de los cambios realizados durante el desarrollo.
 
 ---
 
-# CI/CD con GitHub Actions
+## Gestión Segura de Credenciales
 
-Se implementó un workflow llamado:
+Las credenciales utilizadas durante el proceso de construcción y publicación de imágenes son gestionadas mediante GitHub Secrets.
 
-```text
-.github/workflows/deploy.yml
-```
-
-El pipeline se ejecuta automáticamente al realizar push sobre la rama:
-
-```text
-deploy
-```
-
-Etapas:
-
-1. Checkout del repositorio.
-2. Login en Docker Hub.
-3. Build imagen ventas.
-4. Push imagen ventas.
-5. Build imagen despachos.
-6. Push imagen despachos.
-7. Build imagen frontend.
-8. Push imagen frontend.
+Esto permite proteger información sensible y seguir buenas prácticas de seguridad dentro del flujo DevOps.
 
 ---
 
-# Imágenes publicadas
+## Ejecución del Proyecto
 
-Docker Hub:
+La aplicación puede ser desplegada utilizando Docker Compose, permitiendo levantar toda la arquitectura de servicios de forma centralizada.
 
-```text
-jvc1610/ventas-service:latest
-jvc1610/despachos-service:latest
-jvc1610/front-despacho:latest
-```
+Una vez iniciados los contenedores, los distintos componentes quedan disponibles según la configuración definida para cada servicio.
 
 ---
 
-# Ejecución mediante imágenes publicadas
+## Acceso a la Aplicación
 
-Descargar imágenes:
+Frontend desplegado:
 
-```bash
-docker compose pull
-```
-
-Levantar servicios:
-
-```bash
-docker compose up -d
-```
-
-Verificar contenedores:
-
-```bash
-docker ps
-```
+http://190.46.216.53:3018/
 
 ---
 
-# Verificación de funcionamiento
+## Buenas Prácticas Implementadas
 
-Backend Ventas:
+Durante el desarrollo se aplicaron principios y prácticas DevOps orientadas a la mantenibilidad y automatización:
 
-```bash
-curl http://localhost:8086/api/v1/ventas
-```
-
-Backend Despachos:
-
-```bash
-curl http://localhost:8087/api/v1/despachos
-```
-
-Frontend:
-
-```bash
-curl http://localhost:3018
-```
+* Arquitectura basada en microservicios.
+* Contenedorización mediante Docker.
+* Orquestación con Docker Compose.
+* Persistencia de datos mediante volúmenes.
+* Automatización de procesos con GitHub Actions.
+* Gestión segura de credenciales.
+* Control de versiones con Git y GitHub.
 
 ---
 
-# Seguridad
+## Evidencias Consideradas
 
-Se utilizaron GitHub Secrets para almacenar credenciales sensibles:
+La documentación complementaria de la evaluación incluye evidencia de:
 
-* DOCKER_USERNAME
-* DOCKER_TOKEN
-
-Las credenciales no se almacenan dentro del código fuente.
-
----
-
-# Principios DevOps aplicados
-
-* Contenedorización con Docker.
-* Persistencia mediante volúmenes.
-* Automatización CI/CD.
-* Control de versiones con Git.
-* Integración continua.
-* Entrega continua.
-* Infraestructura reproducible.
-* Separación por microservicios.
+* Construcción de imágenes Docker.
+* Publicación de imágenes en Docker Hub.
+* Ejecución de contenedores.
+* Funcionamiento de GitHub Actions.
+* Persistencia de datos.
+* Funcionamiento de la aplicación desplegada.
 
 ---
 
-# Conclusión
+## Conclusión
 
-La solución permite construir, publicar y desplegar automáticamente los componentes del sistema mediante Docker y GitHub Actions.
+La solución desarrollada cumple con los requerimientos de contenedorización, persistencia y automatización solicitados para la evaluación.
 
-El uso de contenedores facilita la portabilidad, mientras que la automatización reduce errores manuales y mejora la velocidad de despliegue.
+La arquitectura implementada proporciona una base sólida para futuras mejoras, permitiendo ejecutar la aplicación de forma consistente, mantener la separación entre servicios y facilitar los procesos de integración continua dentro de un entorno DevOps.
